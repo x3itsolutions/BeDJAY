@@ -1,19 +1,21 @@
+# Copyright 2013 Fabian Behnke
 # Copyright 2011 Fred Hatfull
 #
-# This file is part of Partify.
+# This file is now part of BeDJAY
+# This file was originally part of Partify (https://github.com/fhats/partify).
 #
-# Partify is free software: you can redistribute it and/or modify
+# This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-#
-# Partify is distributed in the hope that it will be useful,
+
+# This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-#
+
 # You should have received a copy of the GNU General Public License
-# along with Partify.  If not, see <http://www.gnu.org/licenses/>.
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """Functions for showing the player page and getting player status."""
 
@@ -23,7 +25,7 @@ import select
 import time
 from math import ceil
 
-from flask import Response, jsonify, redirect, render_template, request, session, url_for
+from flask import Response, jsonify, redirect, render_template, request, session, url_for, send_file
 
 from decorators import with_authentication, with_mpd
 from partify import app
@@ -33,6 +35,39 @@ from partify.models import Track
 from partify.models import User
 from partify.priv import dump_user_privileges, user_has_privilege
 from partify.selection import needs_voting
+
+import amazonCoverArt
+import urllib
+import os.path
+import shutil
+
+@app.route('/get_image/<searchString>')
+def get_image(searchString):
+	searchString = searchString.replace("/","-");
+	if(os.path.exists("cache/"+searchString)):
+		return send_file("cache/"+searchString, mimetype='image/jpeg', as_attachment=False, attachment_filename=None, add_etags=True, cache_timeout=604800, conditional=False)
+	else:
+		artistAndAlbum = searchString.split(".jpg",1)[0].split("_",1)
+		aca = amazonCoverArt.AmazonCoverArt()
+		covers = aca.search(artistAndAlbum[0], artistAndAlbum[1])
+        	if len(covers) > 0:
+			urllib.urlretrieve (covers[0]["url"], "cache/"+searchString)
+		else:
+			covers = aca.search(artistAndAlbum[0], "")
+			if len(covers) > 0:
+	                        urllib.urlretrieve (covers[0]["url"], "cache/"+searchString)
+			else:
+				shutil.copy2("cache/null.jpg", "cache/"+searchString)
+				
+		
+	
+		return send_file("cache/"+searchString, mimetype='image/jpeg', as_attachment=False, attachment_filename=None, add_etags=True, cache_timeout=604800, conditional=False)
+    #if request.args.get('type') == '1':
+     #  filename = 'ok.gif'
+    #else:
+    #   filename = 'error.gif'
+    #return send_file(filename, mimetype='image/gif')
+
 
 @app.route('/player', methods=['GET'])
 @with_authentication
@@ -85,6 +120,41 @@ def status(mpd):
             del response['elapsed']
 
     return jsonify(response)
+
+@app.route('/queue/hash_global_queue', methods=['GET'])
+@with_authentication
+def hash_global_queue():
+    """Gets the global queue_hashing value.
+
+    :returns: The hash value of user's queue.
+    :rtype: JSON string
+    """
+    global_queue = get_global_queue()
+    return jsonify({"hash":str(hash(str(global_queue)))})
+
+
+@app.route('/player/status/now', methods=['GET'])
+@with_mpd
+def now_status(mpd):
+    """An endpoint for poll-based player status updates.
+
+    :param current: The timestamp in seconds of the last time the client got a playlist update.
+        Useful for minimizing responses so that the entire party queue isn't being shuffled around
+        every time an update is requested.
+    :type current: float or string
+    :returns: A structure containing the current MPD status. Contains the ``global_queue``,
+        ``user_queue``, and ``last_global_playlist_update`` keys if ``current`` was not specified
+        or was before the time of the last playlist update.
+    :rtype: JSON string
+    """
+    client_current = request.args.get('current', None)
+    if client_current is not None:
+        client_current = float(client_current)
+
+    response = _get_status(mpd)
+
+    return jsonify(response)
+
 
 @app.route('/player/status/idle')
 @with_mpd

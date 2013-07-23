@@ -1,19 +1,21 @@
+# Copyright 2013 Fabian Behnke
 # Copyright 2011 Fred Hatfull
 #
-# This file is part of Partify.
+# This file is now part of BeDJAY
+# This file was originally part of Partify (https://github.com/fhats/partify).
 #
-# Partify is free software: you can redistribute it and/or modify
+# This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-#
-# Partify is distributed in the hope that it will be useful,
+
+# This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-#
+
 # You should have received a copy of the GNU General Public License
-# along with Partify.  If not, see <http://www.gnu.org/licenses/>.
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask import flash
 from flask import jsonify
@@ -77,6 +79,10 @@ def register_post():
     form = RegistrationForm(request.form)
     if form.validate():
         user = User(form.name.data, form.username.data, form.password.data)
+	result = User.query.filter((User.username==form.username.data)).first()
+	if result is not None:
+		flash("The username is already taken.")
+		return render_template("register.html", form=form)
         db.session.add(user)
         db.session.commit()
         session['user'] = dict((k, getattr(user, k)) for k in ('name', 'id', 'username'))
@@ -90,6 +96,8 @@ def register_post():
 
 @app.route('/login', methods=['GET'])
 def login_form():
+    if User.query.count() == 0:
+	return redirect(url_for('register_form'))
     """Presents a login WTForm."""
     form = LoginForm(request.form)
     return render_template("login.html", form=form)
@@ -107,6 +115,27 @@ def login_post():
         return redirect(url_for('main'))
     else:
         return render_template("login.html", form=form)
+
+@app.route('/loginform', methods=['GET'])
+def login_form_2():
+    """Presents a login WTForm."""
+    form = LoginForm(request.form)
+    return render_template("loginform.html", form=form)
+
+@app.route('/loginform', methods=['POST'])
+def login_post_2():
+    """Reads input from the login form and performs the authentication."""
+    form = LoginForm(request.form)
+    if form.validate():
+        result = User.query.filter((User.username==form.username.data)).first()
+        if result is not None and check_password_hash(result.password, form.password.data):
+            session['user'] = dict((k, getattr(result, k)) for k in ('name', 'id', 'username'))
+        else:
+            flash("The username/password combination you entered was not found in the database. Please check your information and try again.")
+        return redirect(url_for('admin'))
+    else:
+        return render_template("loginform.html", form=form)
+
 
 @app.route('/logout', methods=['GET'])
 def logout():

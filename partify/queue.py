@@ -1,19 +1,21 @@
+# Copyright 2013 Fabian Behnke
 # Copyright 2011 Fred Hatfull
 #
-# This file is part of Partify.
+# This file is now part of BeDJAY
+# This file was originally part of Partify (https://github.com/fhats/partify).
 #
-# Partify is free software: you can redistribute it and/or modify
+# This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-#
-# Partify is distributed in the hope that it will be useful,
+
+# This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-#
+
 # You should have received a copy of the GNU General Public License
-# along with Partify.  If not, see <http://www.gnu.org/licenses/>.
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """Provides endpoints for queue management as well as synchronization
 of the queue with the MPD server."""
@@ -166,7 +168,22 @@ def list_user_queue():
     :rtype: JSON string
     """
     user_queue = get_user_queue(session['user']['id'])
+    #print hash(str(user_queue))
+    #user_queue.append({"hash":str(hash(str(user_queue)))})	
+    print user_queue
     return jsonify(status="ok", result=user_queue)
+
+@app.route('/queue/hash_user_queue', methods=['GET'])
+@with_authentication
+def hash_user_queue():
+    """Gets the user's queue_hashing value.
+
+    :returns: The hash value of user's queue.
+    :rtype: JSON string
+    """
+    user_queue = get_user_queue(session['user']['id'])
+    return jsonify({"hash":str(hash(str(user_queue)))})
+
 
 def add_track_from_spotify_url(mpd, spotify_url, user_id=None):
     """Adds a track to the user's queue from the specified spotify URL.
@@ -190,6 +207,7 @@ def add_track_from_spotify_url(mpd, spotify_url, user_id=None):
         return None
 
     mpd_id = mpd.addid(spotify_url)
+    
 
     # Add the track to the play queue
     # Disabling this for now since the playlist consistency function should figure it out

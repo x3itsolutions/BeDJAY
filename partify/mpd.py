@@ -1,4 +1,5 @@
 # python-mpd: Python MPD client library
+# Copyright 2013 Fabian Behnke
 # Copyright (C) 2008-2010  J. Alexander Treuman <jat@spatialrift.net>
 #
 # python-mpd is free software: you can redistribute it and/or modify
@@ -220,7 +221,10 @@ class MPDClient(object):
     def _write_command(self, command, args=[]):
         parts = [command]
         for arg in args:
-            parts.append('"%s"' % escape(str(arg)))
+		if type(arg) == int:
+			parts.append('"%s"' % escape(str(arg)))
+		else:
+            		parts.append('"%s"' % escape(str(arg.encode('utf-8'))))
         self._write_line(" ".join(parts))
 
     def _read_line(self):

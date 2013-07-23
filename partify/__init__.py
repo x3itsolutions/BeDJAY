@@ -1,19 +1,21 @@
+# Copyright 2013 Fabian Behnke
 # Copyright 2011 Fred Hatfull
 #
-# This file is part of Partify.
+# This file is now part of BeDJAY
+# This file was originally part of Partify (https://github.com/fhats/partify).
 #
-# Partify is free software: you can redistribute it and/or modify
+# This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-#
-# Partify is distributed in the hope that it will be useful,
+
+# This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-#
+
 # You should have received a copy of the GNU General Public License
-# along with Partify.  If not, see <http://www.gnu.org/licenses/>.
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import datetime
 from functools import wraps

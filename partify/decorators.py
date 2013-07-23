@@ -1,19 +1,21 @@
+# Copyright 2013 Fabian Behnke
 # Copyright 2011 Fred Hatfull
 #
-# This file is part of Partify.
+# This file is now part of BeDJAY
+# This file was originally part of Partify (https://github.com/fhats/partify).
 #
-# Partify is free software: you can redistribute it and/or modify
+# This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-#
-# Partify is distributed in the hope that it will be useful,
+
+# This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-#
+
 # You should have received a copy of the GNU General Public License
-# along with Partify.  If not, see <http://www.gnu.org/licenses/>.
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """A collection of decorators for common endpoint actions."""
 
@@ -41,6 +43,20 @@ def with_authentication(f):
         else:
             return redirect(url_for('login_form'))
     return wrapped
+
+#def with_admin_authentication(f):
+#    """A decorator that ensures that a user is logged in as ADMIN and redirects them to a login page if the user is not authenticated.
+#
+#    The way authentication is currently verified is simply by checking for the user key in session. This is certainly not the best means of 
+#    authentication but it will do for now. Security is not a high priority for this project since its intended use case is in a local scenario.
+#    However, it would be great to have better security if time permits."""
+#    @wraps(f)
+#    def wrapped_admin(*args, **kwargs):
+#        if 'user' in session:
+#            return f(*args, **kwargs)
+#        else:
+#            return redirect(url_for('login_form_2'))
+#    return wrapped_admin
 
 def with_mpd(f):
     """A decorator that establishes an MPD connection Mopidy and passes it into the wrapped function."""
@@ -95,7 +111,7 @@ def with_privileges(privs, fail_mode="json"):
                 return f(*args, **kwargs)
             else:
                 if fail_mode == "redirect":
-                    return redirect(url_for("player"))
+                    return redirect(url_for("login_form_2"))
                 elif fail_mode == "json":
                     return jsonify(status="error", message="You are not authorized to view this page!"), 403
                 else:
